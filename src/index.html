@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PathFinder - World Explorer</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --primary-dark: #1d4ed8;
+      --secondary-color: #f8fafc;
+      --text-color: #1e293b;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #f1f5f9;
+      color: var(--text-color);
+      min-height: 100vh;
+    }
+
+    header {
+      background-color: white;
+      width: 100%;
+      padding: 1.25rem;
+      text-align: center;
+      font-size: 1.5rem;
+      color: var(--text-color);
+      font-weight: 700;
+      box-shadow: var(--shadow-sm);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    #app-container {
+      max-width: 1200px;
+      width: 95%;
+      margin: 2rem auto;
+      display: flex;
+      gap: 2rem;
+      flex-direction: row-reverse;
+      justify-content: center;
+      padding: 0 1rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .side-container {
+      flex: 0 0 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .form-section {
+      background-color: white;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-color);
+      animation: fadeIn 0.4s ease-out;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-section:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .result {
+      flex: 1;
+      max-width: 800px;
+      position: relative;
+      transition: all 0.5s ease;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-color);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+    }
+
+    .primary-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-weight: 600;
+      width: 100%;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .primary-btn:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+    }
+
+    .primary-btn:active {
+      transform: translateY(0);
+    }
+
+    .primary-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 5px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.5);
+      opacity: 0;
+      border-radius: 100%;
+      transform: scale(1, 1) translate(-50%);
+      transform-origin: 50% 50%;
+    }
+
+    .primary-btn:active::after {
+      animation: ripple 1s ease-out;
+    }
+
+    @keyframes ripple {
+      0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+      }
+      100% {
+        transform: scale(20, 20);
+        opacity: 0;
+      }
+    }
+
+    .country-card {
+      background-color: white;
+      border-radius: 1rem;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      animation: slideIn 0.4s ease-out;
+      transition: transform 0.2s ease;
+    }
+
+    .country-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .country-header {
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .country-header img {
+      width: 80px;
+      height: auto;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .country-header h2 {
+      margin: 0;
+      color: var(--text-color);
+      font-size: 1.5rem;
+    }
+
+    .country-section {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .country-section:last-child {
+      border-bottom: none;
+    }
+
+    .country-section h3 {
+      margin: 0 0 1rem 0;
+      color: var(--text-color);
+      font-size: 1.1rem;
+    }
+
+    .country-section p {
+      margin: 0 0 0.75rem 0;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    .country-section p:last-child {
+      margin-bottom: 0;
+    }
+
+    .country-section strong {
+      color: #64748b;
+    }
+
+    .country-section a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+
+    .country-section a:hover {
+      text-decoration: underline;
+    }
+
+    .weather-section {
+      background-color: white;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-color);
+      animation: fadeIn 0.4s ease-out;
+      position: relative;
+      border-left: 4px solid var(--primary-color);
+    }
+
+    .weather-header {
+      margin-bottom: 1rem;
+    }
+
+    .weather-header h3 {
+      margin: 0;
+      color: var(--text-color);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .weather-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background-color: var(--secondary-color);
+      border-radius: 0.5rem;
+      margin-bottom: 0.75rem;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .weather-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .weather-item img {
+      width: 36px;
+      height: 36px;
+    }
+
+    .weather-item p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--text-color);
+      font-weight: 500;
+    }
+
+    .weather-item strong {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      margin-bottom: 0.25rem;
+    }
+
+    .weather-item:nth-child(1) { animation-delay: 0.1s; }
+    .weather-item:nth-child(2) { animation-delay: 0.2s; }
+    .weather-item:nth-child(3) { animation-delay: 0.3s; }
+    .weather-item:nth-child(4) { animation-delay: 0.4s; }
+    .weather-item:nth-child(5) { animation-delay: 0.5s; }
+    .weather-item:nth-child(6) { animation-delay: 0.6s; }
+
+    .nearby-countries {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .nearby-country {
+      background-color: var(--secondary-color);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 1px solid var(--border-color);
+      animation: fadeIn 0.5s ease-out;
+      animation-fill-mode: both;
+    }
+
+    .nearby-country:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .nearby-country img {
+      width: 60px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 0.25rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .nearby-country p {
+      margin: 0;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-color);
+    }
+
+    @media (max-width: 768px) {
+      #app-container {
+        flex-direction: column;
+        padding: 1rem;
+      }
+
+      .side-container {
+        width: 100%;
+        max-width: none;
+      }
+
+      .result {
+        width: 100%;
+      }
+
+      header {
+        position: relative;
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #64748b;
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    .error {
+      padding: 1rem;
+      background-color: #fee2e2;
+      border: 1px solid #fecaca;
+      border-radius: 0.5rem;
+      color: #dc2626;
+      margin-bottom: 1rem;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      color: var(--primary-color);
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 2rem;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      transition: transform 0.3s ease;
+    }
+
+    .logo:hover {
+      transform: scale(1.05);
+    }
+
+    .main-nav {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .nav-link {
+      color: var(--text-color);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-link:hover {
+      color: var(--primary-color);
+      background-color: var(--secondary-color);
+    }
+
+    .nav-link.active {
+      color: var(--primary-color);
+      font-weight: 600;
+      background-color: var(--secondary-color);
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background: var(--primary-color);
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      .main-nav {
+        order: 2;
+      }
+
+      .logo {
+        order: 1;
+      }
+    }
+
+    /* Simplified animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Basic transitions */
+    .form-section {
+      animation: fadeIn 0.4s ease-out;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-section:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .primary-btn {
+      transition: all 0.2s ease;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+    }
+
+    .country-card {
+      animation: slideIn 0.4s ease-out;
+      transition: transform 0.2s ease;
+    }
+
+    .country-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .weather-section {
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .weather-item {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    /* Input focus */
+    input {
+      transition: all 0.2s ease;
+    }
+
+    input:focus {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+    }
+
+    /* Simple error animation */
+    .error {
+      animation: fadeIn 0.3s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link active">Home</a>
+        <a href="itineraries.html" class="nav-link">Travel Notes</a>
+      </nav>
+      <div class="logo">
+        <span style="color: var(--primary-color)">Path</span>Finder
+      </div>
+    </div>
+  </header>
+  <div id="app-container">
+    <div class="side-container">
+      <div class="form-section">
+        <label for="countryInput">Search Country</label>
+        <input 
+          type="text" 
+          id="countryInput" 
+          placeholder="Enter country name..."
+          autocomplete="off"
+        >
+        <button onclick="fetchCountryData()" class="primary-btn">
+          Explore Country
+        </button>
+      </div>
+      <div id="weather" class="weather-section" style="display: none;">
+        <div class="weather-header">
+          <h3>Current Weather</h3>
+        </div>
+        <div class="weather-data" id="weatherData">
+          <!-- Weather data will be inserted here -->
+        </div>
+      </div>
+    </div>
+    <div id="result" class="result">
+      <div class="empty-state">
+        Enter a country name to start exploring
+      </div>
+    </div>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Itineraries - PathFinder</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --primary-dark: #1d4ed8;
+      --secondary-color: #f8fafc;
+      --text-color: #1e293b;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f1f5f9;
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background-color: white;
+      width: 100%;
+      padding: 1.25rem;
+      text-align: center;
+      font-size: 1.5rem;
+      color: var(--text-color);
+      font-weight: 700;
+      box-shadow: var(--shadow-sm);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 2rem;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .main-nav {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .nav-link {
+      color: var(--text-color);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--primary-color);
+      background-color: var(--secondary-color);
+    }
+
+    .nav-link.active {
+      color: var(--primary-color);
+      font-weight: 600;
+      background-color: var(--secondary-color);
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      .main-nav {
+        order: 2;
+      }
+
+      .logo {
+        order: 1;
+      }
+    }
+
+    .content-wrapper {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+      display: flex;
+      gap: 2rem;
+    }
+
+    .side-container {
+      width: 360px;
+      flex-shrink: 0;
+    }
+
+    .result {
+      flex-grow: 1;
+    }
+
+    .form-section {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .form-section h3 {
+      font-size: 1rem;
+      color: var(--text-color);
+      margin-bottom: 1.5rem;
+      font-weight: 500;
+    }
+
+    .input-group {
+      margin-bottom: 1rem;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+      background-color: white;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      font-family: inherit;
+      line-height: 1.5;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .primary-btn, .secondary-btn {
+      flex: 1;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .primary-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+    }
+
+    .primary-btn:hover {
+      opacity: 0.9;
+    }
+
+    .secondary-btn {
+      background: white;
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+    }
+
+    .secondary-btn:hover {
+      background: #f8fafc;
+    }
+
+    .notes-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .note-card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid #edf2f7;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .note-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--primary-color);
+      opacity: 0.7;
+    }
+
+    .note-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    }
+
+    .note-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
+    }
+
+    .note-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.01em;
+    }
+
+    .note-meta {
+      color: #718096;
+      font-size: 0.75rem;
+      letter-spacing: 0.02em;
+    }
+
+    .note-details {
+      background: #f7fafc;
+      border-radius: 12px;
+      padding: 1rem;
+      margin: 1rem 0;
+      font-size: 0.813rem;
+    }
+
+    .note-details p {
+      display: flex;
+      align-items: center;
+      margin: 0.5rem 0;
+      color: #4a5568;
+    }
+
+    .note-details p strong {
+      min-width: 100px;
+      color: #2d3748;
+      font-weight: 500;
+    }
+
+    .note-content {
+      color: #4a5568;
+      line-height: 1.6;
+      font-size: 0.875rem;
+      margin-top: 1rem;
+      position: relative;
+      padding-left: 1rem;
+    }
+
+    .note-content::before {
+      content: '"';
+      position: absolute;
+      left: 0;
+      top: -0.5rem;
+      font-size: 1.5rem;
+      color: var(--primary-color);
+      opacity: 0.5;
+    }
+
+    .note-actions {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .note-card:hover .note-actions {
+      opacity: 1;
+    }
+
+    .icon-btn {
+      background: white;
+      border: 1px solid #e2e8f0;
+      padding: 0.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #718096;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+    }
+
+    .icon-btn:hover {
+      background: #f7fafc;
+      color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .delete-btn:hover {
+      color: #e53e3e;
+      border-color: #e53e3e;
+    }
+
+    @media (max-width: 768px) {
+      .content-wrapper {
+        flex-direction: column;
+        padding: 1rem;
+      }
+
+      .side-container {
+        width: 100%;
+      }
+    }
+
+    /* Toast Container */
+    #toast-container {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* Toast Notification */
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: white;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      transform: translateX(120%);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid #e2e8f0;
+      min-width: 300px;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .toast-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .toast-success .toast-icon {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+
+    .toast-error .toast-icon {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .toast-content {
+      flex-grow: 1;
+    }
+
+    .toast-title {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #1e293b;
+      margin-bottom: 0.25rem;
+    }
+
+    .toast-message {
+      font-size: 0.813rem;
+      color: #64748b;
+    }
+
+    .toast-close {
+      background: none;
+      border: none;
+      padding: 0.25rem;
+      cursor: pointer;
+      color: #94a3b8;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .toast-close:hover {
+      opacity: 1;
+    }
+
+    /* Toast animation */
+    @keyframes slideIn {
+      from {
+        transform: translateX(120%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(120%);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="itineraries.html" class="nav-link active">Travel Notes</a>
+      </nav>
+      <div class="logo">
+        <span style="color: var(--primary-color)">Path</span>Finder
+      </div>
+    </div>
+  </header>
+
+  <div id="app-container">
+    <!-- Main Form Section -->
+    <div class="content-wrapper">
+      <!-- Form Section -->
+      <div class="side-container">
+        <div class="form-section">
+          <h3>Travel Notes</h3>
+
+          <div class="input-group">
+            <input 
+              type="text" 
+              id="countrySelect" 
+              placeholder="Country name"
+              autocomplete="off"
+              required
+            >
+          </div>
+
+          <div class="input-group">
+            <input 
+              type="text" 
+              id="travelerName" 
+              placeholder="Your name"
+              autocomplete="off"
+              required
+            >
+          </div>
+
+          <div class="input-group">
+            <textarea 
+              id="fileContents" 
+              rows="5" 
+              placeholder="Write your travel notes..."
+              required
+            ></textarea>
+          </div>
+
+          <div class="button-group">
+            <button id="btnCreate" class="primary-btn">Save</button>
+            <button id="btnRead" class="secondary-btn">Read</button>
+            <button id="btnDelete" class="secondary-btn">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes Display Section -->
+      <div class="result">
+        <div id="notesList" class="notes-list"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Toast notification -->
+  <div id="toast-container"></div>
+
+
+
+  <script src="itineraries.js"></script>
+</body>
+</html>

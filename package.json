@@ -1,0 +1,11 @@
+{
+  "name": "pathfinder",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^latest_version"
+  }
+}
